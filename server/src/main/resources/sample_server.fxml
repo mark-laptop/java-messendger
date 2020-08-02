@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Label?>
+<HBox alignment="center" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.121"
+      fx:controller="ru.geekbrains.servergui.ServerController">
+    <VBox HBox.hgrow="ALWAYS">
+        <TextField fx:id="portField" promptText="Порт"/>
+        <HBox HBox.hgrow="ALWAYS">
+            <Button text="Start" onAction="#startServer" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+            <Button text="Stop" onAction="#stopServer" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+        </HBox>
+        <Label fx:id="textInfoStatusServer"/>
+    </VBox>
+</HBox>
