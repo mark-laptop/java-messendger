@@ -1,0 +1,4 @@
+/clients_list nick1 nick_2
+nick_2: hy all
+to nick_2: hi nick1
+nick1: is any body here?
