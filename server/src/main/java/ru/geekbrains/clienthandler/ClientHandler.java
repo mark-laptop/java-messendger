@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.channels.ClosedByInterruptException;
 
 public class ClientHandler {
     private Server server;
@@ -18,9 +19,6 @@ public class ClientHandler {
     public String getNickname() {
         return nickname;
     }
-    public String getLogin() {
-        return login;
-    }
 
     public ClientHandler(Server server, Socket socket) {
         try {
@@ -28,17 +26,31 @@ public class ClientHandler {
             this.socket = socket;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
-            startWorkerThread();
+//            startWork();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void startWorkerThread() {
-        new Thread(() -> {
+    public void startWork() {
+        // убрал создание потока в классе, теперь поток создаеться в классе Server через ExecutorService
+        // На сколько верно реализована проверка на interrupt который я бросаю при вызове shutdownNow?
+        // Вроде бы как флаг interrupt сброситься в блокирующих методах потока i/o,
+        // здесь блокирующий только in.readUTF() Как я понял из javadoc при блокировке в потоках i/o при вызове interrupt
+        // будет брошено CloseByInterruptException, поэтому обрабатываю это исключение выставляю флаг и делаю выход из цикла
+//        new Thread(() -> {
+        boolean isNotShutDown = true;
             try {
-                while (true) {
-                    String msg = in.readUTF();
+//                while (true) {
+                while (isNotShutDown) {
+                    isNotShutDown = !Thread.currentThread().isInterrupted();
+                    String msg = "";
+                    try {
+                        msg = in.readUTF();
+                    } catch (ClosedByInterruptException e) {
+                        isNotShutDown = false;
+                        break;
+                    }
                     if (msg.startsWith(MessageManager.AUTH.getText())) {
                         // /auth login1 pass1
                         String[] tokens = msg.split(" ", 3);
@@ -86,8 +98,16 @@ public class ClientHandler {
                         }
                     }
                 }
-                while (true) {
-                    String msg = in.readUTF();
+//                while (true) {
+                while (isNotShutDown) {
+                    isNotShutDown = !Thread.currentThread().isInterrupted();
+                    String msg = "";
+                    try {
+                        msg = in.readUTF();
+                    } catch (ClosedByInterruptException e) {
+                        isNotShutDown = false;
+                        break;
+                    }
                     if (msg.startsWith(MessageManager.SERVICE_SYMBOL.getText())) {
                         if (msg.startsWith(MessageManager.WISP.getText())) {
                             // /w nick1 text message
@@ -120,7 +140,7 @@ public class ClientHandler {
             } finally {
                 closeConnection();
             }
-        }).start();
+//        }).start();
     }
 
     public void sendMessage(String msg) {
